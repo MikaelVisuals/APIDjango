@@ -21,8 +21,8 @@ from rest_framework.authtoken.views import obtain_auth_token  # <-- Here
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('listings/', views.listings),
-    path('listings/<int:id>', views.listing_detail),
+    path('listings/', views.MKRealtyListView.as_view()),
+    path('listings/<int:id>', views.MKRealyDetail.as_view()),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),  # <-- And here
 ]
 

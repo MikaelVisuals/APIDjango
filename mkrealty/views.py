@@ -1,57 +1,53 @@
-import django_filters
-from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.views import APIView
-
 from .models import Realty
 from .serializers import RealtySerializer
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
 
 
-# @permission_classes([IsAuthenticated])
-@api_view(['GET', 'POST'])
-def listings(request, format=None):
-    if request.method == 'GET':
-        realty = Realty.objects.all()
-        print(realty)
-        serializer = RealtySerializer(realty, many=True)
+class MKRealtyListView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = Realty.objects.all()
+    serializer_class = RealtySerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['type', 'location']
+
+    def get(self, request, format=None):
+        realty = self.get_queryset().filter(status='Available')
+        filter_backends = self.filter_queryset(realty)
+        serializer = RealtySerializer(filter_backends, many=True)
         return Response(serializer.data)
 
-    if request.method == 'POST':
+    def post(self, request, format=None):
         serializer = RealtySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def listing_detail(request, id, format=None):
-    try:
-        realty = Realty.objects.get(pk=id)
-    except Realty.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class MKRealyDetail(generics.ListAPIView):
+    def get_object(self, id):
+        try:
+            return Realty.objects.get(pk=id)
+        except Realty.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
+    def get(self, request, id, format=None):
+        realty = self.get_object(id)
         serializer = RealtySerializer(realty)
+        print(serializer)
         return Response(serializer.data)
-    elif request.method == 'PUT':
+
+    def put(self, request, id, format=None):
+        realty = self.get_object(id)
         serializer = RealtySerializer(realty, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
-    elif request.method == 'DELETE':
+
+    def delete(self, request, id, format=None):
+        realty = self.get_realty()
         realty.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class MKRealtyListView(generics.ListAPIView):
-    queryset = Realty.objects.all()
-    serializer_class = RealtySerializer
-    filter_fields = ('type', 'location')
-
-
