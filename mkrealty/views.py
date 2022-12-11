@@ -27,6 +27,7 @@ class MKRealtyListView(generics.ListAPIView):
 
 
 class MKRealyDetail(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
     def get_object(self, id):
         try:
             return Realty.objects.get(pk=id)
@@ -48,6 +49,6 @@ class MKRealyDetail(generics.ListAPIView):
         return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, id, format=None):
-        realty = self.get_realty()
+        realty = self.get_object(id)
         realty.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
