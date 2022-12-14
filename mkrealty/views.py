@@ -1,4 +1,4 @@
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filters
 from .models import Realty
 from .serializers import RealtySerializer
 from rest_framework.response import Response
@@ -6,12 +6,21 @@ from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
 
 
+class MKRealtyFilter(filters.FilterSet):
+    class Meta:
+        model = Realty
+        fields = {
+            'type': ['icontains'],
+            'location': ['icontains']
+        }
+
+
 class MKRealtyListView(generics.ListAPIView):
+    filterset_class =MKRealtyFilter
     permission_classes = (IsAuthenticated,)
     queryset = Realty.objects.all()
-    serializer_class = RealtySerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['type', 'location']
+    serializer_class = RealtySerializer\
+
 
     def get(self, request, format=None):
         realty = self.get_queryset().filter(status='Available')
